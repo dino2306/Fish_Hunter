@@ -1,12 +1,29 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
+using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 public class Player : MonoBehaviour
 {
+    public static Player instance;
+    private void Awake()
+    {
+        if (instance == null)
+        {
+            DontDestroyOnLoad(this);
+            instance = this;
+        }
+        else
+        {
+            Destroy(this);
+        }
+    }
     public MovementJoysitck joystick;
     private Rigidbody2D rb;
     public float speed = 5f;
+    public Text input_F;
+    public Text Score;
+    public int kill;
 
     public GameObject[] Fishs;
     public int n;
@@ -16,19 +33,29 @@ public class Player : MonoBehaviour
     private float GameobjectRotation3;
 
     public bool FacingRight = true;
-    Vector2 vstart;
+   
     // Start is called before the first frame update
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
-        // n = PlayerPrefs.GetInt("selectOption", 0);
+         n = PlayerPrefs.GetInt("selectOption", 0);
 
         foreach (GameObject fish in Fishs)
         {
             fish.SetActive(false);
         }
         Fishs[n].SetActive(true);
-        vstart =Fishs[n].transform.position;
+
+        if (!PlayerPrefs.HasKey("YOURNAME") )
+        {
+
+            input_F.text = "Player";
+        }
+        else
+        {
+            input_F.text = PlayerPrefs.GetString("YOURNAME");
+        }
+       
     }
 
     private void FixedUpdate()
@@ -44,7 +71,11 @@ public class Player : MonoBehaviour
             rb.velocity = Vector2.zero;
 
         }
-
+        if (Input.GetKey(KeyCode.H))
+        {
+            SceneManager.LoadScene(0);
+            Debug.Log("eee");
+        }
     }
   // public float angle;
     // Update is called once per frame
@@ -80,23 +111,8 @@ public class Player : MonoBehaviour
          * tat ca cac doan tren dung de check khi qua quay sang trai or sang phai se chuyen vector Y cua player sang 180 do!
         */
         Upspeed();
-    /*    if (joystick.joysiickVec.x > 0)
-        {
-            Fishs[n].transform.rotation = Quaternion.Euler(0, 0, 0);
-        }
-        else if (joystick.joysiickVec.x < 0)
-        {
-            Fishs[n].transform.rotation = Quaternion.Euler(0, 180, 0);
-        }
 
-        if (joystick.joysiickVec == Vector2.zero) return;
-
-        angle = Mathf.Atan2(joystick.joysiickVec.y, joystick.joysiickVec.x) * Mathf.Rad2Deg;
-        var lookRotation = Quaternion.Euler(angle * Vector3.forward);
-        transform.rotation = lookRotation;
-        transform.localScale = joystick.joysiickVec.x > 0 ? Vector3.one : new Vector3(transform.localScale.x, -transform.localScale.y, transform.localScale.z);
-        Debug.Log(Fishs[n].transform.localScale.y);
-*/
+      
     }
     private void Flip()
     {
@@ -117,5 +133,31 @@ public class Player : MonoBehaviour
             speed /= 2;
             Debug.Log(speed);
         }
+    }
+    public GameObject diePlayFab;
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        if (collision.gameObject.tag.Equals("Enemy"))
+        {
+            kill++;
+            Score.text ="Kill: " + kill.ToString();
+            Instantiate(diePlayFab, transform.position, Quaternion.identity);
+            Destroy(collision.gameObject);
+            StartCoroutine(Reviver());
+        }
+        if (collision.gameObject.tag.Equals("Item"))
+        {
+            Destroy(collision.gameObject);
+        }
+    }
+
+
+
+    public GameObject hs;
+  
+    IEnumerator Reviver()
+    {
+        yield return new WaitForSeconds(3);
+        Instantiate(hs, transform.position, Quaternion.identity);
     }
 }
